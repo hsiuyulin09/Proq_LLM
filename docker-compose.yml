@@ -1,0 +1,14 @@
+version: '3.4' # 指定 Docker Compose 檔案格式的版本, 確保 Docker 引擎能用正確的解析規則來讀取這個檔案
+services: # 定義要啟動的服務. 在本案我們只啟動一個服務, 命名為 weaviate
+  weaviate:
+    image: semitechnologies/weaviate:1.24.1 # 告訴 Docker 去哪裡下載 Weaviate 的軟體及指定版本
+    ports:
+    - 8080:8080 # REST API 端口, 在 Python 寫 http://localhost:8080 時, 請求就是從這裡進入資料庫
+    - 50051:50051 # gRPC 端口, 比 REST 更快, 專門用於大量資料的高速傳輸（ex. 匯入 PDF 向量）
+    restart: on-failure # 如果 Weaviate 容器因為某些錯誤（ex.記憶體不足）意外崩潰, docker 會嘗試自動重啟
+    environment:
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+        # 預設情況下企業資料庫需要 API Key, 設定為 true 可以讓本地測試時匿名進入, 不需要額外身份驗證
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none' # none 意味著我們要手動透過 python 處理 embedding 並傳給 Weaviate
+      CLUSTER_HOSTNAME: 'node1' # 資料庫節點的識別名稱, 在單機運行情況下只是個形式上標記, 確保系統能正常初始化
